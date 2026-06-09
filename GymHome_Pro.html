@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="GymHome">
+<title>GymHome Pro</title>
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --fire: #ff4d00;
+    --fire2: #ff8c00;
+    --dark: #0a0a0a;
+    --card: #141414;
+    --card2: #1c1c1c;
+    --border: #2a2a2a;
+    --text: #f5f0e8;
+    --muted: #888;
+    --blue: #2563eb;
+    --green: #16a34a;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { background:var(--dark); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; overflow-x:hidden; }
+
+  /* NAV */
+  .nav { position:fixed; top:0; left:0; right:0; z-index:100; background:rgba(10,10,10,0.95); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); padding:12px 16px; display:flex; align-items:center; justify-content:space-between; }
+  .nav-logo { font-family:'Bebas Neue',cursive; font-size:24px; letter-spacing:2px; background:linear-gradient(135deg,var(--fire),var(--fire2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .nav-sub { font-size:11px; color:var(--muted); letter-spacing:.1em; }
+
+  /* TABS */
+  .tabs { position:fixed; bottom:0; left:0; right:0; z-index:100; background:rgba(10,10,10,0.97); backdrop-filter:blur(12px); border-top:1px solid var(--border); display:flex; }
+  .tab { flex:1; padding:10px 4px; text-align:center; cursor:pointer; transition:all .2s; border:none; background:none; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:10px; font-weight:600; letter-spacing:.05em; display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .tab.active { color:var(--fire); }
+  .tab svg { width:20px; height:20px; }
+
+  /* MAIN */
+  main { padding:80px 0 80px; }
+
+  /* PAGES */
+  .page { display:none; }
+  .page.active { display:block; }
+
+  /* HERO */
+  .hero { padding:20px 16px 0; }
+  .hero-card { background:linear-gradient(135deg,#1a0800,#0d0d0d); border:1px solid #3a1500; border-radius:16px; padding:24px; position:relative; overflow:hidden; margin-bottom:20px; }
+  .hero-card::before { content:''; position:absolute; top:-30px; right:-30px; width:150px; height:150px; background:radial-gradient(circle,rgba(255,77,0,.15),transparent 70%); }
+  .hero-title { font-family:'Bebas Neue',cursive; font-size:38px; line-height:1; letter-spacing:2px; }
+  .hero-title span { color:var(--fire); }
+  .hero-sub { color:var(--muted); font-size:13px; margin-top:6px; }
+  .equipment-tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+  .eq-tag { background:#1e1e1e; border:1px solid var(--border); border-radius:20px; padding:4px 10px; font-size:11px; color:#aaa; }
+
+  /* PROGRAM SELECTOR */
+  .prog-selector { padding:0 16px; margin-bottom:20px; }
+  .prog-selector h2 { font-family:'Bebas Neue',cursive; font-size:22px; letter-spacing:1px; color:var(--muted); margin-bottom:12px; }
+  .prog-btns { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none; }
+  .prog-btns::-webkit-scrollbar { display:none; }
+  .prog-btn { white-space:nowrap; padding:10px 18px; border-radius:30px; border:2px solid var(--border); background:transparent; color:#aaa; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600; cursor:pointer; transition:all .25s; }
+  .prog-btn.active-prog { border-color:var(--fire); background:var(--fire); color:#fff; }
+
+  /* DAYS LIST */
+  .days-list { padding:0 16px; display:flex; flex-direction:column; gap:10px; }
+  .day-card { background:var(--card); border-radius:14px; border:1px solid var(--border); overflow:hidden; transition:border-color .2s; }
+  .day-card.open { border-color:var(--fire); }
+  .day-header { padding:16px; display:flex; align-items:center; gap:12px; cursor:pointer; }
+  .day-badge { background:var(--fire); color:#fff; border-radius:20px; padding:3px 12px; font-size:11px; font-weight:700; letter-spacing:.05em; white-space:nowrap; }
+  .day-badge.blue { background:var(--blue); }
+  .day-badge.green { background:var(--green); }
+  .day-info { flex:1; }
+  .day-name { font-weight:700; font-size:15px; }
+  .day-focus { color:var(--muted); font-size:12px; margin-top:2px; }
+  .day-arrow { color:var(--fire); font-size:22px; font-weight:700; transition:transform .2s; }
+  .day-card.open .day-arrow { transform:rotate(45deg); }
+  .day-body { display:none; padding:0 16px 16px; }
+  .day-card.open .day-body { display:block; }
+
+  /* EXERCISE CARD */
+  .ex-card { background:var(--card2); border-radius:12px; margin-bottom:12px; overflow:hidden; border:1px solid #222; }
+  .ex-thumb { width:100%; height:160px; object-fit:cover; display:block; background:#1a1a1a; }
+  .ex-thumb-placeholder { width:100%; height:160px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#1a1a1a,#222); font-size:48px; }
+  .ex-content { padding:12px; }
+  .ex-name { font-weight:700; font-size:15px; margin-bottom:6px; }
+  .ex-stats { display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+  .ex-stat { background:#111; border-radius:8px; padding:4px 10px; font-size:12px; }
+  .ex-stat strong { color:var(--fire); }
+  .ex-tip { font-size:12px; color:#888; font-style:italic; margin-bottom:10px; }
+  .ex-tip::before { content:'💡 '; }
+  .yt-btn { display:flex; align-items:center; gap:8px; background:#ff0000; color:#fff; border:none; border-radius:10px; padding:10px 14px; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600; cursor:pointer; text-decoration:none; width:100%; justify-content:center; }
+  .yt-btn svg { width:18px; height:18px; fill:#fff; flex-shrink:0; }
+
+  /* TIPS PAGE */
+  .tips-page { padding:0 16px; }
+  .tips-page h2 { font-family:'Bebas Neue',cursive; font-size:28px; letter-spacing:1px; margin-bottom:16px; }
+  .tip-card { background:var(--card); border-radius:12px; border-left:4px solid var(--fire); padding:14px 16px; margin-bottom:10px; display:flex; gap:12px; align-items:flex-start; }
+  .tip-icon { font-size:22px; flex-shrink:0; }
+  .tip-text { font-size:14px; color:#ccc; line-height:1.5; }
+  .tip-title { font-weight:700; color:var(--text); margin-bottom:4px; }
+
+  /* TIMER PAGE */
+  .timer-page { padding:0 16px; text-align:center; }
+  .timer-page h2 { font-family:'Bebas Neue',cursive; font-size:28px; letter-spacing:1px; margin-bottom:24px; }
+  .timer-display { font-family:'Bebas Neue',cursive; font-size:96px; letter-spacing:4px; color:var(--fire); line-height:1; margin:20px 0; }
+  .timer-label { color:var(--muted); font-size:14px; letter-spacing:.15em; text-transform:uppercase; margin-bottom:24px; }
+  .timer-presets { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:24px; }
+  .preset-btn { background:var(--card); border:2px solid var(--border); border-radius:12px; padding:10px 18px; color:#ccc; font-family:'DM Sans',sans-serif; font-weight:600; font-size:14px; cursor:pointer; transition:all .2s; }
+  .preset-btn.active-preset { border-color:var(--fire); color:var(--fire); }
+  .timer-controls { display:flex; gap:12px; justify-content:center; }
+  .timer-btn { padding:16px 32px; border-radius:14px; border:none; font-family:'DM Sans',sans-serif; font-size:16px; font-weight:700; cursor:pointer; transition:all .2s; }
+  .timer-start { background:var(--fire); color:#fff; }
+  .timer-reset { background:var(--card); color:#ccc; border:2px solid var(--border); }
+
+  /* SECTION TITLES */
+  .section-pad { padding:0 16px 16px; }
+
+  /* PROGRESS RING */
+  .prog-ring { display:flex; justify-content:center; margin:16px 0; }
+
+  /* MODAL */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:200; align-items:flex-end; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:var(--card); border-radius:20px 20px 0 0; padding:24px; width:100%; max-height:85vh; overflow-y:auto; }
+  .modal h3 { font-family:'Bebas Neue',cursive; font-size:26px; letter-spacing:1px; margin-bottom:16px; }
+  .modal-close { float:right; background:var(--border); border:none; color:#fff; width:32px; height:32px; border-radius:50%; font-size:18px; cursor:pointer; }
+
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none} }
+  .page.active { animation:fadeIn .25s ease; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width:4px; } ::-webkit-scrollbar-track { background:transparent; } ::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div>
+    <div class="nav-logo">GymHome Pro</div>
+    <div class="nav-sub">Programme Expert Maison</div>
+  </div>
+  <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--fire),var(--fire2));display:flex;align-items:center;justify-content:center;font-size:18px;">🏠</div>
+</nav>
+
+<main>
+
+<!-- PAGE : PROGRAMMES -->
+<div class="page active" id="page-prog">
+  <div class="hero">
+    <div class="hero-card">
+      <div class="hero-title">TON GYM<br><span>À DOMICILE</span></div>
+      <div class="hero-sub">Programmes complets avec vidéos YouTube</div>
+      <div class="equipment-tags">
+        <span class="eq-tag">🏋️ Banc Weider</span>
+        <span class="eq-tag">🔩 Banc Care</span>
+        <span class="eq-tag">⚙️ Poulie</span>
+        <span class="eq-tag">💪 Haltères</span>
+        <span class="eq-tag">🔗 Barres</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="prog-selector">
+    <h2>CHOISIR UN PROGRAMME</h2>
+    <div class="prog-btns">
+      <button class="prog-btn active-prog" onclick="selectProg('long', this)">🏋️ Long — 5 jours</button>
+      <button class="prog-btn" onclick="selectProg('short', this)">⚡ Court — 3 jours</button>
+      <button class="prog-btn" onclick="selectProg('dumbbell', this)">💪 Haltères seuls</button>
+    </div>
+  </div>
+
+  <div class="days-list" id="days-container"></div>
+</div>
+
+<!-- PAGE : CONSEILS -->
+<div class="page" id="page-tips">
+  <div class="section-pad" style="padding-top:0">
+    <div style="padding:20px 0 16px"><div style="font-family:'Bebas Neue',cursive;font-size:32px;letter-spacing:2px">CONSEILS <span style="color:var(--fire)">EXPERT</span></div></div>
+  </div>
+  <div class="tips-page">
+    <div class="tip-card">
+      <div class="tip-icon">🔥</div>
+      <div><div class="tip-title">Échauffement obligatoire</div><div class="tip-text">5–10 min avant chaque séance : mobilité articulaire, cardio léger (jumping jacks, rotations). Réduit les blessures de 80%.</div></div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">📈</div>
+      <div><div class="tip-title">Surcharge progressive</div><div class="tip-text">Augmente le poids ou les répétitions chaque semaine. C'est le principe fondamental de la croissance musculaire. Note tes séances !</div></div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">😴</div>
+      <div><div class="tip-title">Repos = croissance</div><div class="tip-text">Le muscle se construit pendant le repos, pas pendant l'effort. 7–9h de sommeil est aussi important que l'entraînement lui-même.</div></div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">🍗</div>
+      <div><div class="tip-title">Nutrition ciblée</div><div class="tip-text">1,6 à 2g de protéines par kg de poids corporel par jour. Mange 30–60 min après l'entraînement pour maximiser la récupération.</div></div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">💧</div>
+      <div><div class="tip-title">Hydratation</div><div class="tip-text">Boire 500ml d'eau par heure d'entraînement minimum. La déshydratation réduit la force de 10–20%.</div></div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">🛡️</div>
+      <div><div class="tip-title">Technique avant tout</div><div class="tip-text">Ne jamais sacrifier la forme pour soulever plus lourd. Une mauvaise technique = blessure garantie sur le long terme.</div></div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">⏱️</div>
+      <div><div class="tip-title">Temps de repos</div><div class="tip-text">Exercices de force (squat, bench) : 2–3 min. Exercices d'isolation (curl, extensions) : 60–90s. Ne pas négliger les pauses !</div></div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">🌡️</div>
+      <div><div class="tip-title">Warm-up des séries</div><div class="tip-text">Avant ta série lourde, fais 1–2 séries légères du même exercice (50% du poids). Prépare les muscles et articulations.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE : TIMER -->
+<div class="page" id="page-timer">
+  <div class="timer-page">
+    <div style="padding:8px 0 16px;font-family:'Bebas Neue',cursive;font-size:32px;letter-spacing:2px">CHRONO <span style="color:var(--fire)">REPOS</span></div>
+    <div class="timer-presets">
+      <button class="preset-btn active-preset" onclick="setTimer(45, this)">45s</button>
+      <button class="preset-btn" onclick="setTimer(60, this)">1 min</button>
+      <button class="preset-btn" onclick="setTimer(90, this)">1m30</button>
+      <button class="preset-btn" onclick="setTimer(120, this)">2 min</button>
+      <button class="preset-btn" onclick="setTimer(180, this)">3 min</button>
+    </div>
+    <div class="timer-display" id="timer-display">00:45</div>
+    <div class="timer-label" id="timer-label">PRÊT</div>
+    <div class="timer-controls">
+      <button class="timer-btn timer-start" onclick="toggleTimer()">▶ DÉMARRER</button>
+      <button class="timer-btn timer-reset" onclick="resetTimer()">↺ RESET</button>
+    </div>
+    <div style="margin-top:32px;background:var(--card);border-radius:14px;padding:16px;text-align:left">
+      <div style="font-family:'Bebas Neue',cursive;font-size:18px;letter-spacing:1px;margin-bottom:12px;color:var(--muted)">TEMPS DE REPOS RECOMMANDÉS</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;font-size:13px"><span>Squat, Deadlift, Bench lourd</span><span style="color:var(--fire);font-weight:700">2–3 min</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px"><span>Rowing, Développé épaule</span><span style="color:var(--fire);font-weight:700">90s</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px"><span>Curl, Extensions, Isolation</span><span style="color:var(--fire);font-weight:700">60s</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px"><span>Abdos, Mollets</span><span style="color:var(--fire);font-weight:700">45s</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- BOTTOM TABS -->
+<nav class="tabs">
+  <button class="tab active" onclick="showPage('prog', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    PROGRAMMES
+  </button>
+  <button class="tab" onclick="showPage('tips', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    CONSEILS
+  </button>
+  <button class="tab" onclick="showPage('timer', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    CHRONO
+  </button>
+</nav>
+
+<script>
+// =====================
+// DATA
+// =====================
+const PROGRAMS = {
+  long: {
+    label: "5 Jours — Hypertrophie",
+    badgeClass: "",
+    days: [
+      {
+        day: "Lundi", tag: "POITRINE + TRICEPS", focus: "Pousse Haut",
+        exercises: [
+          { name: "Développé couché barre", sets: 4, reps: "10–12", rest: "90s", tip: "Contrôle la descente en 3s, barre jusqu'aux tétons", emoji: "🏋️", img: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=développé+couché+barre+technique+français" },
+          { name: "Développé incliné haltères (banc Care)", sets: 3, reps: "12", rest: "75s", tip: "Banc à 30–45°, amplitude maximale", emoji: "💪", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=développé+incliné+haltères+technique" },
+          { name: "Écarté haltères plat", sets: 3, reps: "15", rest: "60s", tip: "Légère flexion des coudes, étirement pec", emoji: "🤸", img: "https://images.unsplash.com/photo-1517963879433-6ad2b056d712?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=écarté+haltères+allongé+pectoraux" },
+          { name: "Tirage poulie haute (banc Care)", sets: 4, reps: "12", rest: "75s", tip: "Coudes vers le bas et vers l'arrière", emoji: "🔩", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=tirage+poulie+haute+technique+triceps" },
+          { name: "Extension triceps haltère assis", sets: 3, reps: "15", rest: "60s", tip: "Coude pointé vers plafond, fixe l'articulation", emoji: "💪", img: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=extension+triceps+haltère+assis+technique" },
+        ]
+      },
+      {
+        day: "Mardi", tag: "DOS + BICEPS", focus: "Tire Haut",
+        exercises: [
+          { name: "Rowing barre penché avant", sets: 4, reps: "10–12", rest: "90s", tip: "Dos plat à 45°, tirage vers le nombril", emoji: "🏋️", img: "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=rowing+barre+penché+technique+dos" },
+          { name: "Tirage poulie haute prise large", sets: 4, reps: "12", rest: "75s", tip: "Prise large, tirage vers la poitrine haute", emoji: "🔩", img: "https://images.unsplash.com/photo-1566241440091-ec10de8db2e1?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=tirage+poulie+haute+prise+large+dos+technique" },
+          { name: "Rowing haltère unilatéral", sets: 3, reps: "12 chaque", rest: "60s", tip: "Genou et main sur banc, tirage hanches", emoji: "💪", img: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=rowing+haltère+unilatéral+dos+technique" },
+          { name: "Curl barre debout", sets: 4, reps: "10", rest: "75s", tip: "Coudes fixes, supination en montant", emoji: "💪", img: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=curl+barre+biceps+technique+français" },
+          { name: "Curl marteau haltères", sets: 3, reps: "12", rest: "60s", tip: "Poignets neutres, alternez les bras", emoji: "🤜", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=curl+marteau+haltères+biceps+technique" },
+        ]
+      },
+      {
+        day: "Mercredi", tag: "REPOS ACTIF", focus: "Récupération",
+        exercises: [
+          { name: "Étirements full body", sets: 1, reps: "20 min", rest: "—", tip: "Ischio, pec, épaules, hanches", emoji: "🧘", img: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=étirements+récupération+musculaire+full+body" },
+          { name: "Marche rapide ou vélo léger", sets: 1, reps: "30 min", rest: "—", tip: "FC modérée, récupération active", emoji: "🚶", img: "https://images.unsplash.com/photo-1571008887538-b36bb32f4571?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=récupération+active+sport+marche+cardio" },
+        ]
+      },
+      {
+        day: "Jeudi", tag: "ÉPAULES + ABDOS", focus: "Deltoïdes & Core",
+        exercises: [
+          { name: "Développé militaire haltères assis", sets: 4, reps: "10–12", rest: "90s", tip: "Dos droit, ne pas cambrer, poussée verticale", emoji: "🏋️", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=développé+militaire+haltères+épaule+technique" },
+          { name: "Élévations latérales haltères", sets: 3, reps: "15", rest: "60s", tip: "Légère flexion du coude, montée lente et contrôlée", emoji: "✈️", img: "https://images.unsplash.com/photo-1517963879433-6ad2b056d712?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=élévations+latérales+haltères+épaule+deltoïde" },
+          { name: "Élévations frontales barre", sets: 3, reps: "12", rest: "60s", tip: "Ne pas dépasser hauteur épaule, dos droit", emoji: "⬆️", img: "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=élévations+frontales+barre+épaule+technique" },
+          { name: "Oiseau haltères (deltoïde postérieur)", sets: 3, reps: "15", rest: "60s", tip: "Penché à 45°, coudes légèrement fléchis", emoji: "🦅", img: "https://images.unsplash.com/photo-1566241440091-ec10de8db2e1?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=oiseau+haltères+deltoïde+postérieur+technique" },
+          { name: "Crunch banc incliné", sets: 4, reps: "20", rest: "45s", tip: "Contraction d'1s en haut, expiration en montant", emoji: "🔥", img: "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=crunch+banc+incliné+abdominaux+technique" },
+          { name: "Relevé de jambes banc plat", sets: 3, reps: "15", rest: "45s", tip: "Bas du dos collé au banc, contrôle en descente", emoji: "🦵", img: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=relevé+de+jambes+banc+abdominaux+bas" },
+        ]
+      },
+      {
+        day: "Vendredi", tag: "JAMBES + FESSIERS", focus: "Membres Inférieurs",
+        exercises: [
+          { name: "Squat barre sur épaules", sets: 4, reps: "10–12", rest: "2 min", tip: "Cuisses parallèles au sol minimum, dos droit", emoji: "🏋️", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=squat+barre+technique+français+débutant" },
+          { name: "Fentes haltères marchées", sets: 3, reps: "12 chaque", rest: "90s", tip: "Genou avant ne dépasse pas la pointe du pied", emoji: "🚶", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=fentes+haltères+marchées+technique+jambes" },
+          { name: "Romanian Deadlift barre", sets: 4, reps: "12", rest: "90s", tip: "Hanches en arrière, dos plat, focus ischio", emoji: "⬇️", img: "https://images.unsplash.com/photo-1517963879433-6ad2b056d712?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=romanian+deadlift+soulevé+terre+roumain+technique" },
+          { name: "Hip Thrust haltère (banc)", sets: 3, reps: "15", rest: "60s", tip: "Épaules sur banc, haltère sur hanches, serrer fessiers", emoji: "🍑", img: "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=hip+thrust+fessiers+banc+technique+français" },
+          { name: "Élévations de mollets haltères", sets: 4, reps: "20", rest: "45s", tip: "Pied sur marche, amplitude max, descente lente", emoji: "🦵", img: "https://images.unsplash.com/photo-1566241440091-ec10de8db2e1?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=élévations+mollets+haltères+debout+technique" },
+        ]
+      }
+    ]
+  },
+  short: {
+    label: "3 Jours — Full Body",
+    badgeClass: "blue",
+    days: [
+      {
+        day: "Lundi", tag: "FULL BODY A", focus: "Composés Prioritaires",
+        exercises: [
+          { name: "Développé couché barre", sets: 4, reps: "8–10", rest: "90s", tip: "Mouvement roi de la poitrine, forme stricte", emoji: "🏋️", img: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=développé+couché+barre+technique+français" },
+          { name: "Rowing barre penché", sets: 4, reps: "8–10", rest: "90s", tip: "Antagoniste parfait au bench, même intensité", emoji: "🏋️", img: "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=rowing+barre+penché+technique+dos" },
+          { name: "Squat barre", sets: 3, reps: "12", rest: "2 min", tip: "Jambes à largeur épaule, descente contrôlée", emoji: "🦵", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=squat+barre+technique+français+débutant" },
+          { name: "Curl barre", sets: 3, reps: "12", rest: "60s", tip: "Finition biceps, coudes fixes sur les côtés", emoji: "💪", img: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=curl+barre+biceps+technique+français" },
+          { name: "Extensions triceps poulie", sets: 3, reps: "12", rest: "60s", tip: "Seuls les avant-bras bougent, coudes fixes", emoji: "💪", img: "https://images.unsplash.com/photo-1517963879433-6ad2b056d712?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=extension+triceps+poulie+corde+technique" },
+        ]
+      },
+      {
+        day: "Mercredi", tag: "FULL BODY B", focus: "Épaules & Isométrique",
+        exercises: [
+          { name: "Développé militaire haltères", sets: 4, reps: "10", rest: "90s", tip: "Assis dos droit, presse verticale", emoji: "🏋️", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=développé+militaire+haltères+épaule+technique" },
+          { name: "Tirage poulie haute (banc Care)", sets: 4, reps: "10", rest: "90s", tip: "Prise large, tirage vers poitrine haute, coudes bas", emoji: "🔩", img: "https://images.unsplash.com/photo-1566241440091-ec10de8db2e1?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=tirage+poulie+haute+prise+large+dos+technique" },
+          { name: "Romanian Deadlift barre", sets: 3, reps: "12", rest: "90s", tip: "Ischio-jambiers en contraction, dos neutre", emoji: "⬇️", img: "https://images.unsplash.com/photo-1517963879433-6ad2b056d712?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=romanian+deadlift+technique+ischio+jambiers" },
+          { name: "Élévations latérales haltères", sets: 3, reps: "15", rest: "60s", tip: "Lent et contrôlé, pas d'élan", emoji: "✈️", img: "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=élévations+latérales+haltères+épaule+deltoïde" },
+          { name: "Crunch + Relevé de jambes", sets: 3, reps: "15+15", rest: "45s", tip: "Enchaîner sans pause, respiration rythmée", emoji: "🔥", img: "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=crunch+relevé+jambes+abdominaux+circuit" },
+        ]
+      },
+      {
+        day: "Vendredi", tag: "FULL BODY C", focus: "Volume & Finition",
+        exercises: [
+          { name: "Développé couché haltères", sets: 4, reps: "10–12", rest: "75s", tip: "Plus d'amplitude qu'à la barre, descente profonde", emoji: "💪", img: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=développé+couché+haltères+pectoraux+technique" },
+          { name: "Rowing haltère unilatéral", sets: 3, reps: "12 chaque", rest: "60s", tip: "Genou sur banc, tirage coude haut", emoji: "💪", img: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=rowing+haltère+unilatéral+dos+technique" },
+          { name: "Fentes haltères", sets: 3, reps: "12 chaque", rest: "90s", tip: "Alternez gauche/droite, genou à 90°", emoji: "🚶", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=fentes+haltères+alternées+jambes+technique" },
+          { name: "Curl marteau haltères", sets: 3, reps: "12", rest: "60s", tip: "Poignets neutres tout le long du mouvement", emoji: "🤜", img: "https://images.unsplash.com/photo-1517963879433-6ad2b056d712?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=curl+marteau+haltères+biceps+brachial+technique" },
+          { name: "Écarté haltères couché", sets: 3, reps: "15", rest: "60s", tip: "Étirement pec en bas, contraction en haut", emoji: "🤸", img: "https://images.unsplash.com/photo-1566241440091-ec10de8db2e1?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=écarté+haltères+couché+pectoraux+étirement" },
+        ]
+      }
+    ]
+  },
+  dumbbell: {
+    label: "Haltères Seuls",
+    badgeClass: "green",
+    days: [
+      {
+        day: "Séance 1", tag: "HAUT DU CORPS", focus: "Push + Pull Haltères",
+        exercises: [
+          { name: "Développé couché haltères", sets: 4, reps: "12", rest: "75s", tip: "Sur banc Weider ou Care, amplitude maximale", emoji: "💪", img: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=développé+couché+haltères+pectoraux+technique" },
+          { name: "Rowing haltère unilatéral", sets: 3, reps: "12 chaque", rest: "60s", tip: "Genou + main sur banc pour stabiliser le dos", emoji: "🔙", img: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=rowing+haltère+unilatéral+dos+technique" },
+          { name: "Développé militaire haltères assis", sets: 3, reps: "10", rest: "75s", tip: "Dos droit contre dossier, poussée verticale", emoji: "🏋️", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=développé+militaire+haltères+épaule+assis" },
+          { name: "Curl haltères alterné avec supination", sets: 3, reps: "12 chaque", rest: "60s", tip: "Tourne le poignet vers l'extérieur en montant", emoji: "💪", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=curl+haltères+alterné+supination+biceps" },
+          { name: "Extension triceps haltère (1 bras)", sets: 3, reps: "12 chaque", rest: "60s", tip: "Coude pointé vers plafond, amplitude complète", emoji: "💪", img: "https://images.unsplash.com/photo-1517963879433-6ad2b056d712?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=extension+triceps+haltère+un+bras+technique" },
+          { name: "Élévations latérales haltères", sets: 3, reps: "15", rest: "45s", tip: "Légère flexion coude, pouce vers le bas légèrement", emoji: "✈️", img: "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=élévations+latérales+haltères+épaule+deltoïde" },
+        ]
+      },
+      {
+        day: "Séance 2", tag: "BAS DU CORPS", focus: "Jambes & Abdos Haltères",
+        exercises: [
+          { name: "Goblet Squat haltère", sets: 4, reps: "15", rest: "90s", tip: "Haltère tenu à deux mains contre poitrine", emoji: "🦵", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=goblet+squat+haltère+technique+débutant" },
+          { name: "Fentes statiques haltères", sets: 3, reps: "12 chaque", rest: "75s", tip: "Avant-pied et genou avant alignés verticalement", emoji: "🚶", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=fentes+statiques+haltères+technique+jambes" },
+          { name: "Romanian Deadlift haltères", sets: 4, reps: "12", rest: "90s", tip: "Hanches en arrière, dos neutre, ischio focus", emoji: "⬇️", img: "https://images.unsplash.com/photo-1517963879433-6ad2b056d712?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=romanian+deadlift+haltères+ischio+technique" },
+          { name: "Hip Thrust haltère sur banc", sets: 3, reps: "15", rest: "60s", tip: "Épaules sur le banc, haltère sur hanches", emoji: "🍑", img: "https://images.unsplash.com/photo-1566241440091-ec10de8db2e1?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=hip+thrust+haltère+fessiers+banc+technique" },
+          { name: "Élévations mollets haltères debout", sets: 4, reps: "20", rest: "45s", tip: "Pied sur une marche pour plus d'amplitude", emoji: "🦶", img: "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=élévations+mollets+haltères+debout+technique" },
+          { name: "Crunch oblique haltère", sets: 3, reps: "15 chaque", rest: "45s", tip: "Haltère tenu d'un côté, rotation vers le genou", emoji: "🔥", img: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=crunch+oblique+haltère+abdominaux+technique" },
+        ]
+      },
+      {
+        day: "Séance 3", tag: "FULL BODY EXPRESS", focus: "Circuit 45 minutes",
+        exercises: [
+          { name: "Circuit : Bench + Rowing + Squat (4 tours)", sets: 4, reps: "12 chaque", rest: "45s entre exos", tip: "2 min de repos entre chaque tour complet", emoji: "🔄", img: "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=circuit+training+haltères+full+body+maison" },
+          { name: "Superset : Écarté + Élévations épaules", sets: 3, reps: "15 chaque", rest: "45s", tip: "Enchaîner les 2 exercices sans pause", emoji: "⚡", img: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=superset+pectoraux+épaules+haltères" },
+          { name: "Superset : Fentes + Extensions triceps", sets: 3, reps: "12 chaque", rest: "60s", tip: "Jambes puis bras sans pause entre les deux", emoji: "⚡", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=superset+fentes+triceps+full+body+haltères" },
+          { name: "Finition abdos : Crunch + Relevé jambes", sets: 3, reps: "20+15", rest: "45s", tip: "Enchaîner, expiration forcée sur la contraction", emoji: "🔥", img: "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=400&h=220&fit=crop", yt: "https://www.youtube.com/results?search_query=circuit+abdominaux+crunch+relevé+jambes" },
+        ]
+      }
+    ]
+  }
+};
+
+let currentProg = 'long';
+let openDayIdx = -1;
+
+function selectProg(key, btn) {
+  currentProg = key;
+  openDayIdx = -1;
+  document.querySelectorAll('.prog-btn').forEach(b => b.classList.remove('active-prog'));
+  btn.classList.add('active-prog');
+  renderDays();
+}
+
+function renderDays() {
+  const prog = PROGRAMS[currentProg];
+  const container = document.getElementById('days-container');
+  container.innerHTML = '';
+  prog.days.forEach((day, i) => {
+    const badgeClass = prog.badgeClass || '';
+    const isOpen = openDayIdx === i;
+    const el = document.createElement('div');
+    el.className = `day-card${isOpen ? ' open' : ''}`;
+    el.innerHTML = `
+      <div class="day-header" onclick="toggleDay(${i})">
+        <span class="day-badge ${badgeClass}">${day.tag}</span>
+        <div class="day-info">
+          <div class="day-name">${day.day}</div>
+          <div class="day-focus">${day.focus} · ${day.exercises.length} exercices</div>
+        </div>
+        <div class="day-arrow">+</div>
+      </div>
+      <div class="day-body">
+        ${day.exercises.map(ex => `
+          <div class="ex-card">
+            <img class="ex-thumb" src="${ex.img}" alt="${ex.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="ex-thumb-placeholder" style="display:none">${ex.emoji}</div>
+            <div class="ex-content">
+              <div class="ex-name">${ex.name}</div>
+              <div class="ex-stats">
+                <div class="ex-stat"><strong>${ex.sets}</strong> séries</div>
+                <div class="ex-stat"><strong>${ex.reps}</strong> reps</div>
+                <div class="ex-stat">repos <strong>${ex.rest}</strong></div>
+              </div>
+              <div class="ex-tip">${ex.tip}</div>
+              <a href="${ex.yt}" target="_blank" class="yt-btn">
+                <svg viewBox="0 0 24 24"><path d="M21.8 8s-.2-1.4-.8-2c-.8-.8-1.6-.8-2-.9C16.3 5 12 5 12 5s-4.3 0-7 .1c-.4.1-1.2.1-2 .9-.6.6-.8 2-.8 2S2 9.6 2 11.2v1.5c0 1.6.2 3.2.2 3.2s.2 1.4.8 2c.8.8 1.8.7 2.2.8C6.8 19 12 19 12 19s4.3 0 7-.2c.4-.1 1.2-.1 2-.9.6-.6.8-2 .8-2s.2-1.6.2-3.2v-1.5C22 9.6 21.8 8 21.8 8z"/><polygon fill="#ff0000" points="10 15 15.2 12 10 9 10 15" style="fill:#fff"/></svg>
+                Voir la vidéo YouTube
+              </a>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    container.appendChild(el);
+  });
+}
+
+function toggleDay(i) {
+  openDayIdx = openDayIdx === i ? -1 : i;
+  renderDays();
+}
+
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// TIMER
+let timerDuration = 45;
+let timerRemaining = 45;
+let timerRunning = false;
+let timerInterval = null;
+
+function setTimer(s, btn) {
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active-preset'));
+  btn.classList.add('active-preset');
+  timerDuration = s;
+  timerRemaining = s;
+  timerRunning = false;
+  clearInterval(timerInterval);
+  document.querySelector('.timer-start').textContent = '▶ DÉMARRER';
+  document.getElementById('timer-label').textContent = 'PRÊT';
+  updateTimerDisplay();
+}
+
+function toggleTimer() {
+  if (timerRunning) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    document.querySelector('.timer-start').textContent = '▶ REPRENDRE';
+    document.getElementById('timer-label').textContent = 'EN PAUSE';
+  } else {
+    if (timerRemaining <= 0) { resetTimer(); }
+    timerRunning = true;
+    document.querySelector('.timer-start').textContent = '⏸ PAUSE';
+    document.getElementById('timer-label').textContent = 'EN COURS...';
+    timerInterval = setInterval(() => {
+      timerRemaining--;
+      updateTimerDisplay();
+      if (timerRemaining <= 0) {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        document.querySelector('.timer-start').textContent = '▶ DÉMARRER';
+        document.getElementById('timer-label').textContent = '✅ TERMINÉ !';
+        if ('vibrate' in navigator) navigator.vibrate([200,100,200]);
+      }
+    }, 1000);
+  }
+}
+
+function resetTimer() {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  timerRemaining = timerDuration;
+  document.querySelector('.timer-start').textContent = '▶ DÉMARRER';
+  document.getElementById('timer-label').textContent = 'PRÊT';
+  updateTimerDisplay();
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(timerRemaining / 60).toString().padStart(2,'0');
+  const s = (timerRemaining % 60).toString().padStart(2,'0');
+  document.getElementById('timer-display').textContent = `${m}:${s}`;
+  const pct = timerRemaining / timerDuration;
+  document.getElementById('timer-display').style.color = pct < .2 ? '#ff0000' : pct < .5 ? '#ff8c00' : 'var(--fire)';
+}
+
+// Init
+renderDays();
+</script>
+
+</body>
+</html>
